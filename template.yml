@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: unzip uploaded zip file to another S3 bucket
+Resources:
+  Unzipper:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: artifact
+      Handler: unzipper
+      Runtime: go1.x
+      Tracing: Active
+      Events:
+        UploadedEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref Zipped
+            Events: s3:ObjectCreated:Put
+
+  Zipped:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: zipped-artifact
+
+  Unzipped:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: unzipped-artifact
