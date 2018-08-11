@@ -13,7 +13,7 @@ func TestHandler(t *testing.T) {
 			{
 				S3: events.S3Entity{
 					Bucket: events.S3Bucket{Name: "zipped-artifact"},
-					Object: events.S3Object{Key: "test.zip"},
+					Object: events.S3Object{Key: "sample.zip"},
 				},
 			},
 		},
