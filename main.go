@@ -4,9 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -14,10 +12,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/toshi0607/unzipper/s3"
 	"github.com/toshi0607/unzipper/zip"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -25,6 +21,9 @@ const (
 	zipPath      = artifactPath + "zipped/"
 	unzipPath    = artifactPath + "unzipped/"
 	tempZip      = "temp.zip"
+	destBucket   = "unzipped-artifact"
+	region       = "ap-northeast-1"
+	dirPerm      = 0777
 )
 
 var (
@@ -58,7 +57,7 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String("ap-northeast-1")}),
+		Region: aws.String(region)}),
 	)
 
 	downloader := s3.NewDownloader(sess, bucket, key, zipContentPath+tempZip)
@@ -71,43 +70,8 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 		log.Fatal(err)
 	}
 
-	uploader := s3manager.NewUploader(sess)
-	eg := errgroup.Group{}
-
-	err = filepath.Walk(unzipPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		eg.Go(func() error {
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			key := strings.Replace(file.Name(), unzipPath, "", 1)
-			_, err = uploader.Upload(&s3manager.UploadInput{
-				Bucket: aws.String("unzipped-artifact"),
-				Key:    aws.String(key),
-				Body:   file,
-			})
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		return nil
-	})
-
-	if err := eg.Wait(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err != nil {
+	uploader := s3.NewUploader(sess, unzipPath, destBucket)
+	if err := uploader.Upload(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -121,10 +85,10 @@ func prepareDirectory() error {
 		}
 	}
 
-	if err := os.MkdirAll(zipContentPath, 0777); err != nil {
+	if err := os.MkdirAll(zipContentPath, dirPerm); err != nil {
 		return err
 	}
-	if err := os.MkdirAll(unzipContentPath, 0777); err != nil {
+	if err := os.MkdirAll(unzipContentPath, dirPerm); err != nil {
 		return err
 	}
 
