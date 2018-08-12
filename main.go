@@ -14,12 +14,15 @@ import (
 
 	"log"
 
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -61,7 +64,6 @@ func handler(s3Event events.S3Event) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer file.Close()
 
 	numBytes, err := downloader.Download(file,
@@ -76,6 +78,46 @@ func handler(s3Event events.S3Event) error {
 	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
 
 	err = Unzip(tmpZipPath+"temp.zip", tmpUnzipPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	uploader := s3manager.NewUploader(sess)
+	eg := errgroup.Group{}
+
+	err = filepath.Walk(tmpUnzipFolder, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		eg.Go(func() error {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			key := strings.Replace(file.Name(), tmpUnzipFolder, "", 1)
+			_, err = uploader.Upload(&s3manager.UploadInput{
+				Bucket: aws.String("unzipped-artifact"),
+				Key:    aws.String(key),
+				Body:   file,
+			})
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		log.Fatal(err)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
