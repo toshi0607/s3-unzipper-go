@@ -2,22 +2,18 @@ package main
 
 import (
 	"archive/zip"
-	"fmt"
-	"time"
-
-	"os"
-
+	"context"
 	"io"
-	"path/filepath"
-
-	"strconv"
-
 	"log"
-
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -25,33 +21,40 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	artifactPath = "tmp/artifact/"
+	zipPath      = artifactPath + "zipped/"
+	unzipPath    = artifactPath + "unzipped/"
+	tempZip      = "temp.zip"
+)
+
+var (
+	now              string
+	zipContentPath   string
+	unzipContentPath string
+)
+
+func init() {
+	now = strconv.Itoa(int(time.Now().UnixNano()))
+	zipContentPath = zipPath + now + "/"
+	unzipContentPath = unzipPath + now + "/"
+}
+
 func main() {
 	lambda.Start(handler)
 }
 
-func handler(s3Event events.S3Event) error {
-	fmt.Print("lambda called")
+func handler(ctx context.Context, s3Event events.S3Event) error {
+	if lc, ok := lambdacontext.FromContext(ctx); ok {
+		log.Printf("AwsRequestID: %s", lc.AwsRequestID)
+	}
 
 	bucket := s3Event.Records[0].S3.Bucket.Name
 	key := s3Event.Records[0].S3.Object.Key
 
-	//now := time.Now().Format("2006-01-02-15-04-05")
-	now := strconv.Itoa(int(time.Now().UnixNano()))
-	tmpZipFolder := "tmp/artifact/zipped/"
-	tmpUnzipFolder := "tmp/artifact/unzipped/"
-	tmpZipPath := tmpZipFolder + now + "/"
-	tmpUnzipPath := tmpUnzipFolder + now + "/"
+	log.Printf("bucket: %s ,key: %s", bucket, key)
 
-	if _, err := os.Stat("tmp/artifact"); err == nil {
-		if err := os.RemoveAll("tmp/artifact"); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	if err := os.MkdirAll(tmpZipPath, 0777); err != nil {
-		log.Fatal(err)
-	}
-	if err := os.MkdirAll(tmpUnzipPath, 0777); err != nil {
+	if err := prepareDirectory(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -60,7 +63,7 @@ func handler(s3Event events.S3Event) error {
 	)
 	downloader := s3manager.NewDownloader(sess)
 
-	file, err := os.Create(tmpZipPath + "temp.zip")
+	file, err := os.Create(zipContentPath + tempZip)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,9 +78,9 @@ func handler(s3Event events.S3Event) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
+	log.Println("Downloaded", file.Name(), numBytes, "bytes")
 
-	err = Unzip(tmpZipPath+"temp.zip", tmpUnzipPath)
+	err = Unzip(zipContentPath+tempZip, unzipContentPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,9 +88,9 @@ func handler(s3Event events.S3Event) error {
 	uploader := s3manager.NewUploader(sess)
 	eg := errgroup.Group{}
 
-	err = filepath.Walk(tmpUnzipFolder, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(unzipPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return err
 		}
 		if info.IsDir() {
@@ -100,7 +103,7 @@ func handler(s3Event events.S3Event) error {
 			}
 			defer file.Close()
 
-			key := strings.Replace(file.Name(), tmpUnzipFolder, "", 1)
+			key := strings.Replace(file.Name(), unzipPath, "", 1)
 			_, err = uploader.Upload(&s3manager.UploadInput{
 				Bucket: aws.String("unzipped-artifact"),
 				Key:    aws.String(key),
@@ -120,6 +123,23 @@ func handler(s3Event events.S3Event) error {
 
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	return nil
+}
+
+func prepareDirectory() error {
+	if _, err := os.Stat(artifactPath); err == nil {
+		if err := os.RemoveAll(artifactPath); err != nil {
+			return err
+		}
+	}
+
+	if err := os.MkdirAll(zipContentPath, 0777); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(unzipContentPath, 0777); err != nil {
+		return err
 	}
 
 	return nil
