@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/toshi0607/unzipper/s3"
 	"github.com/toshi0607/unzipper/zip"
 	"golang.org/x/sync/errgroup"
 )
@@ -60,27 +60,14 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("ap-northeast-1")}),
 	)
-	downloader := s3manager.NewDownloader(sess)
 
-	file, err := os.Create(zipContentPath + tempZip)
+	downloader := s3.NewDownloader(sess, bucket, key, zipContentPath+tempZip)
+	downloadedZipPath, err := downloader.Download()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
 
-	numBytes, err := downloader.Download(file,
-		&s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Downloaded", file.Name(), numBytes, "bytes")
-
-	err = zip.Unzip(zipContentPath+tempZip, unzipContentPath)
-	if err != nil {
+	if err := zip.Unzip(downloadedZipPath, unzipContentPath); err != nil {
 		log.Fatal(err)
 	}
 
