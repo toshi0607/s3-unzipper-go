@@ -21,7 +21,6 @@ const (
 	zipPath      = artifactPath + "zipped/"
 	unzipPath    = artifactPath + "unzipped/"
 	tempZip      = "temp.zip"
-	destBucket   = "unzipped-artifact"
 	region       = "ap-northeast-1"
 	dirPerm      = 0777
 )
@@ -30,12 +29,14 @@ var (
 	now              string
 	zipContentPath   string
 	unzipContentPath string
+	destBucket       string
 )
 
 func init() {
 	now = strconv.Itoa(int(time.Now().UnixNano()))
 	zipContentPath = zipPath + now + "/"
 	unzipContentPath = unzipPath + now + "/"
+	destBucket = os.Getenv("DEST_BUCKET")
 }
 
 func main() {

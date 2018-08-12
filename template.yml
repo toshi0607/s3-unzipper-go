@@ -8,6 +8,9 @@ Resources:
       CodeUri: artifact
       Handler: unzipper
       Runtime: go1.x
+      Environment:
+        Variables:
+          DEST_BUCKET: unzipped-artifact
       Tracing: Active
       Events:
         UploadedEvent:

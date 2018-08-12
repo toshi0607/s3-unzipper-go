@@ -20,3 +20,6 @@ sam.yml
 
 # artifacts
 tmp/
+
+# env
+.envrc
