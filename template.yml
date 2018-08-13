@@ -8,6 +8,12 @@ Resources:
       CodeUri: artifact
       Handler: unzipper
       Runtime: go1.x
+      Timeout: 180
+      Policies:
+      - S3CrudPolicy:
+          BucketName: zipped-artifact
+      - S3CrudPolicy:
+          BucketName: unzipped-artifact
       Environment:
         Variables:
           DEST_BUCKET: unzipped-artifact

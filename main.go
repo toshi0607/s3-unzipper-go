@@ -11,17 +11,17 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/toshi0607/unzipper/s3"
 	"github.com/toshi0607/unzipper/zip"
 )
 
 const (
-	artifactPath = "tmp/artifact/"
+	artifactPath = "/tmp/artifact/"
 	zipPath      = artifactPath + "zipped/"
 	unzipPath    = artifactPath + "unzipped/"
 	tempZip      = "temp.zip"
-	region       = "ap-northeast-1"
 	dirPerm      = 0777
 )
 
@@ -58,7 +58,7 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(region)}),
+		Region: aws.String(endpoints.ApNortheast1RegionID)}),
 	)
 
 	downloader := s3.NewDownloader(sess, bucket, key, zipContentPath+tempZip)
@@ -75,6 +75,8 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 	if err := uploader.Upload(); err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("%s unzipped to S3 bucket: %s", downloadedZipPath, destBucket)
 
 	return nil
 }
