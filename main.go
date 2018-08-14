@@ -23,6 +23,7 @@ const (
 	unzipPath    = artifactPath + "unzipped/"
 	tempZip      = "temp.zip"
 	dirPerm      = 0777
+	region       = endpoints.ApNortheast1RegionID
 )
 
 var (
@@ -58,7 +59,7 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 	}
 
 	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(endpoints.ApNortheast1RegionID)}),
+		Region: aws.String(region)}),
 	)
 
 	downloader := s3.NewDownloader(sess, bucket, key, zipContentPath+tempZip)

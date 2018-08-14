@@ -14,9 +14,12 @@ import (
 )
 
 const (
-	srcBucket  = "zipped-artifact-dev"
 	sampleFile = "sample.zip"
 	testFile   = "testdata/" + sampleFile
+)
+
+var (
+	srcBucket = os.Getenv("SRC_BUCKET")
 )
 
 func TestHandler(t *testing.T) {
