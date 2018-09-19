@@ -73,6 +73,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:82ba0dec93b071f356db3b97972bf09892aa4fa8a5dfb7e7cf205965a856d262"
+  name = "github.com/toshi0607/unzipper"
+  packages = [
+    "s3",
+    "zip",
+  ]
+  pruneopts = "UT"
+  revision = "9e2cdd036585e703268f0f4ad7d2a5bd4852677b"
+
+[[projects]]
+  branch = "master"
   digest = "1:76ee51c3f468493aff39dbacc401e8831fbb765104cbf613b89bef01cf4bad70"
   name = "golang.org/x/net"
   packages = ["context"]
@@ -95,9 +106,12 @@
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-lambda-go/lambdacontext",
     "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/endpoints",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/s3",
     "github.com/aws/aws-sdk-go/service/s3/s3manager",
+    "github.com/toshi0607/unzipper/s3",
+    "github.com/toshi0607/unzipper/zip",
     "golang.org/x/sync/errgroup",
   ]
   solver-name = "gps-cdcl"
