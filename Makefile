@@ -10,3 +10,10 @@ deploy: build
 		--template-file sam.yml \
 		--stack-name stack-unzipper-lambda \
 		--capabilities CAPABILITY_IAM
+
+delete:
+	aws s3 rm s3://zipped-artifact --recursive
+	aws s3 rm s3://unzipped-artifact --recursive
+	aws cloudformation delete-stack --stack-name stack-unzipper-lambda
+	aws s3 rm s3://lambda-unzipper --recursive
+    aws s3 rb s3://lambda-unzipper
