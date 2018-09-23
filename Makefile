@@ -4,7 +4,7 @@ build:
 deploy: build
 	sam package \
 		--template-file template.yml \
-		--s3-bucket lambda-unzipper \
+		--s3-bucket stack-bucket-for-lambda-unzipper \
 		--output-template-file sam.yml
 	sam deploy \
 		--template-file sam.yml \
