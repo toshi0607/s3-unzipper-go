@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/toshi0607/unzipper/s3"
-	"github.com/toshi0607/unzipper/zip"
+	"github.com/toshi0607/s3-unzipper-go/s3"
+	"github.com/toshi0607/s3-unzipper-go/zip"
 )
 
 const (
