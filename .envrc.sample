@@ -1,0 +1,3 @@
+export UNZIPPED_ARTIFACT_BUCKET=unzipped-artifacts-20180930-toshi
+export ZIPPED_ARTIFACT_BUCKET=zipped-artifacts-20180930-toshi
+export STACK_BUCKET=stack-bucket-for-lambda-unzipper-20180930-toshi

@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 Description: unzip uploaded zip file to another S3 bucket
+Parameters:
+  ZippedArtifactBucket:
+    Type: String
+  UnzippedArtifactBucket:
+    Type: String
 Resources:
   Unzipper:
     Type: AWS::Serverless::Function
@@ -11,12 +16,12 @@ Resources:
       Timeout: 180
       Policies:
       - S3CrudPolicy:
-          BucketName: zipped-artifact
+          BucketName: !Ref ZippedArtifactBucket
       - S3CrudPolicy:
-          BucketName: unzipped-artifact
+          BucketName: !Ref UnzippedArtifactBucket
       Environment:
         Variables:
-          DEST_BUCKET: unzipped-artifact
+          UNZIPPED_ARTIFACT_BUCKET: !Ref UnzippedArtifactBucket
       Tracing: Active
       Events:
         UploadedEvent:
@@ -28,9 +33,9 @@ Resources:
   Zipped:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: zipped-artifact
+      BucketName: !Ref ZippedArtifactBucket
 
   Unzipped:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: unzipped-artifact
+      BucketName: !Ref UnzippedArtifactBucket
