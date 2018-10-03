@@ -19,12 +19,10 @@ const (
 )
 
 var (
-	srcBucket = os.Getenv("SRC_BUCKET")
+	srcBucket = os.Getenv("ZIPPED_ARTIFACT_BUCKET") + "-dev"
 )
 
 func TestHandler(t *testing.T) {
-	setup(t)
-
 	events := events.S3Event{
 		Records: []events.S3EventRecord{
 			{
@@ -46,31 +44,29 @@ func TestHandler(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	teardown(t)
 }
 
-func setup(t *testing.T) {
+func setup() {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region)}),
 	)
 	svc := s3.New(sess)
 
-	destBucket = os.Getenv("DEST_BUCKET")
+	destBucket = os.Getenv("UNZIPPED_ARTIFACT_BUCKET") + "-dev"
 	for _, b := range []string{srcBucket, destBucket} {
 		if !bucketExists(svc, b) {
 			_, err := svc.CreateBucket(&s3.CreateBucketInput{
 				Bucket: aws.String(b),
 			})
 			if err != nil {
-				t.Error(err)
+				panic(err)
 			}
 		}
 	}
 
 	file, err := os.Open(testFile)
 	if err != nil {
-		t.Error(err)
+		panic(err)
 	}
 	defer file.Close()
 
@@ -81,31 +77,30 @@ func setup(t *testing.T) {
 		Body:   file,
 	})
 	if err != nil {
-		t.Error(err)
+		panic(err)
 	}
 }
 
-func teardown(t *testing.T) {
+func teardown() {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(region)}),
 	)
 	svc := s3.New(sess)
 
-	destBucket = os.Getenv("DEST_BUCKET")
 	for _, b := range []string{srcBucket, destBucket} {
 		iter := s3manager.NewDeleteListIterator(svc, &s3.ListObjectsInput{
 			Bucket: aws.String(b),
 		})
 
 		if err := s3manager.NewBatchDeleteWithClient(svc).Delete(aws.BackgroundContext(), iter); err != nil {
-			t.Error(err)
+			panic(err)
 		}
 
 		_, err := svc.DeleteBucket(&s3.DeleteBucketInput{
 			Bucket: aws.String(b),
 		})
 		if err != nil {
-			t.Error(err)
+			panic(err)
 		}
 	}
 }
@@ -118,4 +113,11 @@ func bucketExists(svc *s3.S3, bucket string) bool {
 	}
 
 	return true
+}
+
+func TestMain(m *testing.M) {
+	setup()
+	exitCode := m.Run()
+	teardown()
+	os.Exit(exitCode)
 }

@@ -18,12 +18,12 @@ import (
 )
 
 const (
-	artifactPath = "/tmp/artifact/"
-	zipPath      = artifactPath + "zipped/"
-	unzipPath    = artifactPath + "unzipped/"
-	tempZip      = "temp.zip"
-	dirPerm      = 0777
-	region       = endpoints.ApNortheast1RegionID
+	tempArtifactPath = "/tmp/artifact/"
+	tempZipPath      = tempArtifactPath + "zipped/"
+	tempUnzipPath    = tempArtifactPath + "unzipped/"
+	tempZip          = "temp.zip"
+	dirPerm          = 0777
+	region           = endpoints.ApNortheast1RegionID
 )
 
 var (
@@ -34,10 +34,7 @@ var (
 )
 
 func init() {
-	now = strconv.Itoa(int(time.Now().UnixNano()))
-	zipContentPath = zipPath + now + "/"
-	unzipContentPath = unzipPath + now + "/"
-	destBucket = os.Getenv("DEST_BUCKET")
+	destBucket = os.Getenv("UNZIPPED_ARTIFACT_BUCKET")
 }
 
 func main() {
@@ -72,7 +69,7 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 		log.Fatal(err)
 	}
 
-	uploader := s3.NewUploader(sess, unzipPath, destBucket)
+	uploader := s3.NewUploader(sess, tempUnzipPath, destBucket)
 	if err := uploader.Upload(); err != nil {
 		log.Fatal(err)
 	}
@@ -83,8 +80,12 @@ func handler(ctx context.Context, s3Event events.S3Event) error {
 }
 
 func prepareDirectory() error {
-	if _, err := os.Stat(artifactPath); err == nil {
-		if err := os.RemoveAll(artifactPath); err != nil {
+	now = strconv.Itoa(int(time.Now().UnixNano()))
+	zipContentPath = tempZipPath + now + "/"
+	unzipContentPath = tempUnzipPath + now + "/"
+
+	if _, err := os.Stat(tempArtifactPath); err == nil {
+		if err := os.RemoveAll(tempArtifactPath); err != nil {
 			return err
 		}
 	}
