@@ -1,0 +1,21 @@
+@startuml
+
+actor user
+
+participant "S3①" as s31
+participant "Lambda" as lambda
+participant "S3②" as s32
+
+user -> s31 : upload zip file
+activate s31
+s31 ->> lambda : s3:ObjectCreated:Put event
+activate lambda
+s31 --> user : ack
+deactivate s31
+lambda -> lambda : unzip
+lambda -> s32 :  upload upzipped files
+activate s32
+s32 --> lambda : ack
+deactivate s32
+
+@enduml
