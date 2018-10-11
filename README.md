@@ -38,3 +38,10 @@ In the test, `setup` prepares 2 real S3 buckets because SAM local doesn't suppor
 One is for an even source that triggers an AWS Lambda and another is for a destination of unzipped artifacts.
 
 Because S3 buckets created at the test are deleted on every test execution, idempotency is guaranteed.
+
+## Articles (Japanese)
+
+* [Goで学ぶAWS Lambda（PDF、ePubセット版）](https://toshi0607.booth.pm/items/1034858)
+  * This architecture is explained in detail in this book.
+* [技術書典5で『Goで学ぶAWS Lambda』を出展します #技術書典](http://toshi0607.com/programming/learning-aws-lambda-with-go/)
+* [技術書典5の『Goで学ぶAWS Lambda』の振り返りとフィードバックのお願い #技術書典](http://toshi0607.com/event/review-of-tbf5/)
