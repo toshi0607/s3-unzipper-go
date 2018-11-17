@@ -17,7 +17,7 @@ And,
 * install [aws-cli](https://github.com/aws/aws-cli)
 * install [aws-sam-cli](https://github.com/awslabs/aws-sam-cli). Docker is also required. Follow the instruction [here](https://github.com/awslabs/aws-sam-cli#installation).
 * install [direnv](https://github.com/direnv/direnv)
-* indtall [saw](https://github.com/TylerBrock/saw)
+* install [saw](https://github.com/TylerBrock/saw)
   * you can watch CloudWatch logs on your terminal
 * set environment variables to [.envrc.sample](./.envrc.sample) and remove *.sample*.
   * *ZIPPED_ARTIFACT_BUCKET* is S3 bucket name. It's S3① in the sequence and should be unique globally.
