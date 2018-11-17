@@ -30,6 +30,12 @@ Resources:
             Bucket: !Ref Zipped
             Events: s3:ObjectCreated:Put
 
+  UnzipperLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Unzipper}
+      RetentionInDays: 1
+
   Zipped:
     Type: AWS::S3::Bucket
     Properties:

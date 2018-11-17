@@ -17,6 +17,8 @@ And,
 * install [aws-cli](https://github.com/aws/aws-cli)
 * install [aws-sam-cli](https://github.com/awslabs/aws-sam-cli). Docker is also required. Follow the instruction [here](https://github.com/awslabs/aws-sam-cli#installation).
 * install [direnv](https://github.com/direnv/direnv)
+* indtall [saw](https://github.com/TylerBrock/saw)
+  * you can watch CloudWatch logs on your terminal
 * set environment variables to [.envrc.sample](./.envrc.sample) and remove *.sample*.
   * *ZIPPED_ARTIFACT_BUCKET* is S3 bucket name. It's S3① in the sequence and should be unique globally.
   * *UNZIPPED_ARTIFACT_BUCKET* is S3 bucket name. It's S3② in the sequence and should be unique globally.
@@ -28,6 +30,20 @@ And,
 $ dep ensure                       # to resolve dependency
 $ aws s3 mb "s3://${STACK_BUCKET}" # for artifacts of SAM
 $ make deploy
+```
+
+### behavior
+
+Deploy is required before checking behavior.
+
+```
+$ saw groups
+/aws/lambda/stack-unzipper-lambda-Unzipper-XXXXXXXXXXXX
+
+$ saw watch /aws/lambda/stack-unzipper-lambda-Unzipper-XXXXXXXXXXXX
+
+# open another window
+$ aws s3 cp testdata/sample.zip "s3://${ZIPPED_ARTIFACT_BUCKET}"
 ```
 
 ## Local
